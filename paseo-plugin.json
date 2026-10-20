@@ -1,0 +1,9 @@
+{
+  "id": "magie-cron",
+  "name": "Magie Cron",
+  "description": "Periodically and automatically disable or enable models under specific providers in Paseo via cron schedules.",
+  "media": [],
+  "requirements": {
+    "paseo": ">=0.11.0"
+  }
+}
