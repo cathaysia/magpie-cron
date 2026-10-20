@@ -9,7 +9,7 @@
 // * (any), */n (step), n (exact number), a,b (lists), a-b (ranges)
 function parseCronField(field, min, max) {
   const values = new Set();
-  const parts = field.split(",");
+  const parts = String(field).split(",");
 
   for (const part of parts) {
     if (part === "*") {
@@ -83,7 +83,6 @@ export function isRuleCurrentlyBlocking(rule, now = new Date()) {
   }
 
   // If duration is specified, check if any minute in the last `durationMin` window matched the cron
-  // Check in 1-minute steps backwards
   const checkDate = new Date(now.getTime());
   for (let offset = 0; offset < durationMin; offset++) {
     checkDate.setTime(now.getTime() - offset * 60 * 1000);
@@ -131,12 +130,15 @@ function matchesTarget(rule, providerId, modelName) {
  * Gateway hook: onRequest
  * Intercepts requests before routing
  */
-export function onRequest(body, ctx) {
-  const options = ctx.options || {};
+export function onRequest(body, ctx = {}) {
+  // Defensive guard in case called during plugin load or test
+  if (!body) return body;
+  const options = ctx?.options || {};
   const rules = Array.isArray(options.rules) ? options.rules : [];
   if (rules.length === 0) return body;
 
   const requestedModel = body.model;
+  if (!requestedModel) return body;
   const now = new Date();
 
   for (const rule of rules) {
@@ -151,10 +153,12 @@ export function onRequest(body, ctx) {
       }
 
       if (matchesTarget(rule, providerId, modelName)) {
-        return ctx.reject(
-          403,
-          `[magpie-cron] Model '${requestedModel}' is currently disabled by scheduled rule: '${rule.name || rule.cron}'`
-        );
+        if (typeof ctx?.reject === "function") {
+          return ctx.reject(
+            403,
+            `[magpie-cron] Model '${requestedModel}' is currently disabled by scheduled rule: '${rule.name || rule.cron}'`
+          );
+        }
       }
     }
   }
@@ -166,23 +170,27 @@ export function onRequest(body, ctx) {
  * Gateway hook: onProvider
  * Intercepts request as it is about to go to a specific provider
  */
-export function onProvider(body, ctx) {
-  const options = ctx.options || {};
+export function onProvider(body, ctx = {}) {
+  // Defensive guard in case called during plugin load or test
+  if (!body) return body;
+  const options = ctx?.options || {};
   const rules = Array.isArray(options.rules) ? options.rules : [];
   if (rules.length === 0) return body;
 
   const now = new Date();
-  const provider = ctx.provider;
+  const provider = ctx?.provider;
   if (!provider) return body;
 
   for (const rule of rules) {
     if (!rule.enabled) continue;
     if (isRuleCurrentlyBlocking(rule, now)) {
       if (matchesTarget(rule, provider.id, provider.model)) {
-        return ctx.reject(
-          403,
-          `[magpie-cron] Provider '${provider.id}' model '${provider.model}' is currently disabled by rule '${rule.name || rule.cron}'`
-        );
+        if (typeof ctx?.reject === "function") {
+          return ctx.reject(
+            403,
+            `[magpie-cron] Provider '${provider.id}' model '${provider.model}' is currently disabled by rule '${rule.name || rule.cron}'`
+          );
+        }
       }
     }
   }
