@@ -1,32 +1,41 @@
 {
-  "name": "magie-cron",
-  "private": true,
-  "version": "0.0.0",
+  "name": "magpie-cron",
+  "version": "0.1.0",
+  "description": "Magpie plugin to periodically disable or enable models under specific providers via cron schedules",
+  "type": "module",
+  "main": "./middleware.js",
   "files": [
-    "paseo-plugin.json",
-    "OVERVIEW.md",
-    "index.client.ts",
-    "index.client.tsx",
-    "index.server.ts",
-    "index.server.tsx",
-    "client/",
-    "server/",
-    "shared/"
+    "middleware.js",
+    "ui/",
+    "README.md",
+    "LICENSE"
   ],
-  "scripts": {
-    "typecheck": "tsc --noEmit"
+  "magpie": {
+    "middleware": "./middleware.js",
+    "panels": [
+      {
+        "slot": "settings",
+        "file": "ui/index.html",
+        "title": "Model Cron Scheduler",
+        "titles": {
+          "zh": "模型定时计划"
+        }
+      }
+    ],
+    "permissions": ["providers:list"]
   },
-  "devDependencies": {
-    "@getpaseo/plugin": "0.11.1",
-    "@tanstack/react-query": "^5.90.11",
-    "@types/node": "^26.6.5",
-    "@types/react": "~19.2.0",
-    "react": "19.1.0",
-    "react-native": "0.81.5",
-    "typescript": "^5.9.3",
-    "zod": "^4.4.3"
-  },
-  "dependencies": {
-    "cron-parser": "^5.10.2"
+  "keywords": [
+    "magpie",
+    "magpie-plugin",
+    "middleware",
+    "cron",
+    "scheduler",
+    "model-manager"
+  ],
+  "author": "cathaysia",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cathaysia/magpie-cron.git"
   }
 }
