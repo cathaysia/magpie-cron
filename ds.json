@@ -1,0 +1,22 @@
+{
+  "rules": [
+    {
+      "name": "DeepSeek 峰时限制 (上午 9:00-12:00)",
+      "provider": "*",
+      "modelId": "*deepseek*",
+      "cron": "0 9 * * 1-5",
+      "durationMinutes": 180,
+      "action": "disable",
+      "enabled": true
+    },
+    {
+      "name": "DeepSeek 峰时限制 (下午 14:00-18:00)",
+      "provider": "*",
+      "modelId": "*deepseek*",
+      "cron": "0 14 * * 1-5",
+      "durationMinutes": 240,
+      "action": "disable",
+      "enabled": true
+    }
+  ]
+}
