@@ -23,21 +23,24 @@ const btnSaveJson = document.getElementById("btn-save-json");
 const LOCAL_STORAGE_KEY = "magpie_cron_options_fallback";
 
 async function loadOptions() {
-  // 1. 尝试从 window.magpie.options 读取
-  if (window.magpie?.options?.get) {
+  // 1. 尝试等待并使用官方标准的 magpie.options
+  const bridge = window.magpie || globalThis.magpie;
+  if (bridge) {
     try {
-      if (window.magpie.ready) {
+      if (bridge.ready) {
         await Promise.race([
-          window.magpie.ready,
+          bridge.ready,
           new Promise((_, reject) => setTimeout(() => reject(new Error("ready timeout")), 1500)),
-        ]);
+        ]).catch(() => {});
       }
-      const opts = await window.magpie.options.get();
-      if (opts && (Array.isArray(opts.rules) || opts.rules)) {
-        return opts;
+      if (typeof bridge.options?.get === "function") {
+        const opts = await bridge.options.get();
+        if (opts && (Array.isArray(opts.rules) || opts.rules)) {
+          return opts;
+        }
       }
     } catch (e) {
-      console.warn("[magpie-cron] Could not load options via window.magpie.options:", e);
+      console.warn("[magpie-cron] Could not load options via magpie.options:", e);
     }
   }
 
@@ -49,7 +52,7 @@ async function loadOptions() {
     }
   } catch {}
 
-  // 3. 尝试读取可能由服务端注入或本地存储保存的配置
+  // 3. 尝试读取本地存储保存的配置
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (raw) {
@@ -72,10 +75,11 @@ async function persistOptions() {
   }
 
   // 2. 如果存在 magpie bridge，调用 set
+  const bridge = window.magpie || globalThis.magpie;
   let saved = false;
-  if (window.magpie?.options?.set) {
+  if (typeof bridge?.options?.set === "function") {
     try {
-      await window.magpie.options.set(currentOptions);
+      await bridge.options.set(currentOptions);
       saved = true;
     } catch (e) {
       console.error("[magpie-cron] Failed to save options to magpie.options:", e);
